@@ -23,17 +23,24 @@ namespace Microsoft.AspNetCore.Blazor.RenderTree
         private readonly Stack<int> _openElementIndices = new Stack<int>();
         private RenderTreeFrameType? _lastNonAttributeFrameType;
 
-        // Since rendering is not recursive, we can assign a single "current" RenderTreeBuilder
-        // at the start of the render process, and unassign it at the end.
+        // Since rendering is synchronous and not recursive, we can assign a single "current"
+        // RenderTreeBuilder at the start of the render process, and unassign it at the end.
         // This is equivalent to passing a RenderTreeBuilder instance down through the hierarchy
         // of render method calls. But having it as a static means that RenderTreeBuilder doesn't
         // have to appear in the method signature for render method calls, which leads to a much
         // simpler programming model. More importantly it avoids having to create a new delegate
         // instance on the heap (plus an instance of the compiler-generated class for any lambda
         // variables) for every invocation of a render action.
-        // TODO: To support multiple concurrent renderers doing unrelated things (e.g., for
-        // server-side prerendering, define a SynchronizationContext)
-        private static RenderTreeBuilder _activeInstance;
+        //
+        // When running in the browser, just having a single static RenderTreeBuilder would be fine
+        // because there's only one UI thread anyway. For server-side prerendering, defining it
+        // with [ThreadStatic] allows multiple concurrent render processes, as long as they are
+        // each synchronous (don't contain "await"), which is true under the current design.
+        //
+        // If we ever want to support "await" during a render action (e.g., for some server-side
+        // rendering process that doesn't fit the normal Blazor programming model), consider defining
+        // a SynchronizationContext.
+        [ThreadStatic] private static RenderTreeBuilder _activeInstance;
 
         /// <summary>
         /// Gets the currently active <see cref="RenderTreeBuilder"/>.

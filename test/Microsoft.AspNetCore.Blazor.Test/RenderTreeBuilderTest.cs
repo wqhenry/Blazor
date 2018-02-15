@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Blazor.RenderTree;
 using Microsoft.AspNetCore.Blazor.Test.Shared;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.AspNetCore.Blazor.Test
@@ -387,6 +388,69 @@ namespace Microsoft.AspNetCore.Blazor.Test
             {
                 activeBuilder.Deactivate();
             }
+        }
+
+        [Fact]
+        public void CanActivateMoreThanOneOnDifferentContexts()
+        {
+            // Arrange
+            var builder1 = new RenderTreeBuilder(new TestRenderer());
+            var builder2 = new RenderTreeBuilder(new TestRenderer());
+            var externalDelay = new TaskCompletionSource<bool>();
+            var externalDelayTask = externalDelay.Task;
+            var context1DidActivateBuilder = new TaskCompletionSource<bool>();
+            var context2DidActivateBuilder = new TaskCompletionSource<bool>();
+
+            // Act: Run in two contexts
+            // The test here represents a kind of async render process, which is not actually supported
+            // in Blazor currently. It works only because the logic inside is entirely synchronous.
+            //
+            // If you put "await" in here, you can observe it failing - see the comment.
+            // We're never going to need async rendering when running in the browser (just running the
+            // whole of .NET in a single worker thread is fine), and it's not certain that we'd need it
+            // for server-side prerendering either, because the rendering process itself doesn't need
+            // to wait for anything (it already has all the data). We'd only want async rendering on
+            // the server if generalising to non-Blazor-style apps.
+            var context1 = Task.Run(async () =>
+            {
+                builder1.Activate();
+                context1DidActivateBuilder.SetResult(true);
+
+                // See comment above
+                // Currently, rendering has to be synchronous which is what makes the [ThreadStatic]
+                // work OK. If you change the following line to "await externalDelayTask;" (and the
+                // corresponding one in the other context below) then it fails
+                externalDelayTask.Wait();
+
+                RenderTreeBuilder.Current.AddText(0, "Hello from context 1");
+                builder1.Deactivate();
+            });
+
+            var context2 = Task.Run(async () =>
+            {
+                builder2.Activate();
+                context2DidActivateBuilder.SetResult(true);
+                externalDelayTask.Wait();
+                RenderTreeBuilder.Current.AddText(0, "Hello from context 2");
+                builder2.Deactivate();
+            });
+
+            // Wait for both contexts to have activated their builders
+            // (or if either of them throws, bail out with the error here)
+            var eitherContextTerminatedPrematurely = Task.WhenAny(context1, context2);
+            var waitForBothBuildersActiveTask = Task.WhenAll(context1DidActivateBuilder.Task, context2DidActivateBuilder.Task);
+            var firstResolvedTask = Task.WhenAny(eitherContextTerminatedPrematurely, waitForBothBuildersActiveTask).Result;
+            firstResolvedTask.Wait(); // Surface any errors
+
+            // Now we know both contexts have activated their builders, let them continue
+            externalDelay.SetResult(true);
+            Task.WhenAll(context1, context2).Wait();
+
+            // Assert
+            Assert.Collection(builder1.GetFrames(),
+                frame => AssertFrame.Text(frame, "Hello from context 1"));
+            Assert.Collection(builder2.GetFrames(),
+                frame => AssertFrame.Text(frame, "Hello from context 2"));
         }
 
         private class TestComponent : IComponent
