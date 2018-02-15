@@ -60,9 +60,7 @@ namespace Microsoft.AspNetCore.Blazor.RenderTree
 
         internal void Activate()
         {
-            // Although this logic is not properly thread-safe, it doesn't make any difference yet
-            // because having a single static _activeInstance implies we're relying on there being
-            // only one UI thread anyway. Later on when we use SynchronizationContext this will change.
+            // The _activeInstance is thread-specific, so we don't need any locking here
             if (_activeInstance != null)
             {
                 // Should never be possible. The exception is to aid diagnosis of any bugs in the Blazor code itself.
