@@ -9,9 +9,9 @@ namespace Microsoft.AspNetCore.Blazor.Rendering
     internal readonly struct RenderQueueEntry
     {
         public readonly int ComponentId;
-        public readonly Action<RenderTreeBuilder> RenderAction;
+        public readonly Action RenderAction;
 
-        public RenderQueueEntry(int componentId, Action<RenderTreeBuilder> renderAction)
+        public RenderQueueEntry(int componentId, Action renderAction)
         {
             ComponentId = componentId;
             RenderAction = renderAction ?? throw new ArgumentNullException(nameof(renderAction));

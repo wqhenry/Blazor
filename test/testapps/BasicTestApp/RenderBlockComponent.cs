@@ -17,11 +17,9 @@ namespace BasicTestApp
         // differencer would think the following nodes had been removed, then the
         // region was inserted, followed by a new copy of the following nodes. That's
         // not as efficient and wouldn't preserve focus etc.
-        private Action<RenderTreeBuilder> _exampleRegion = builder =>
+        private Action _exampleRegion = () =>
         {
-            // TODO: Support some kind of RenderBlock primitive
-            // which is an Action<RenderTreeBuilder>. Can use the
-            // same type name for RenderHandle.Render's arg.
+            var builder = RenderTreeBuilder.Current;
             builder.OpenElement(100, "p");
             builder.AddAttribute(101, "name", "region-element");
             builder.AddAttribute(102, "style", "color: red");
@@ -43,8 +41,9 @@ namespace BasicTestApp
             Render();
         }
 
-        private void Render() => _renderHandle.Render(builder =>
+        private void Render() => _renderHandle.Render(() =>
         {
+            var builder = RenderTreeBuilder.Current;
             builder.OpenElement(0, "div"); // Container so we can see that passing through regions is OK
             builder.OpenRegion(1);
             builder.AddText(2, "Region will be toggled below ");
@@ -52,7 +51,7 @@ namespace BasicTestApp
             if (_showRegion)
             {
                 builder.OpenRegion(3);
-                _exampleRegion(builder);
+                _exampleRegion();
                 builder.CloseRegion();
             }
 

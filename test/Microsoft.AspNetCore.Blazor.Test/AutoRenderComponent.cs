@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.AspNetCore.Blazor.Components;
-using Microsoft.AspNetCore.Blazor.RenderTree;
 
 namespace Microsoft.AspNetCore.Blazor.Test
 {
@@ -24,6 +23,6 @@ namespace Microsoft.AspNetCore.Blazor.Test
         public void TriggerRender()
             => _renderHandle.Render(BuildRenderTree);
 
-        protected abstract void BuildRenderTree(RenderTreeBuilder builder);
+        protected abstract void BuildRenderTree();
     }
 }

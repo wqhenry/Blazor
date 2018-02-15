@@ -7,6 +7,10 @@ namespace Microsoft.AspNetCore.Blazor.Razor
     // Keep these in sync with the actual RenderTreeBuilder definitions
     internal static class RenderTreeBuilder
     {
+        public static readonly string RenderTreeBuilderTypeFullName = "Microsoft.AspNetCore.Blazor.RenderTree.RenderTreeBuilder";
+
+        public static readonly string Current = nameof(Current);
+
         public static readonly string OpenElement = nameof(OpenElement);
 
         public static readonly string CloseElement = nameof(CloseElement);

@@ -23,6 +23,25 @@ namespace Microsoft.AspNetCore.Blazor.RenderTree
         private readonly Stack<int> _openElementIndices = new Stack<int>();
         private RenderTreeFrameType? _lastNonAttributeFrameType;
 
+        // Since rendering is not recursive, we can assign a single "current" RenderTreeBuilder
+        // at the start of the render process, and unassign it at the end.
+        // This is equivalent to passing a RenderTreeBuilder instance down through the hierarchy
+        // of render method calls. But having it as a static means that RenderTreeBuilder doesn't
+        // have to appear in the method signature for render method calls, which leads to a much
+        // simpler programming model. More importantly it avoids having to create a new delegate
+        // instance on the heap (plus an instance of the compiler-generated class for any lambda
+        // variables) for every invocation of a render action.
+        // TODO: To support multiple concurrent renderers doing unrelated things (e.g., for
+        // server-side prerendering, define a SynchronizationContext)
+        private static RenderTreeBuilder _activeInstance;
+
+        /// <summary>
+        /// Gets the currently active <see cref="RenderTreeBuilder"/>.
+        /// </summary>
+        public static RenderTreeBuilder Current
+            => _activeInstance
+            ?? throw new InvalidOperationException($"No {nameof(RenderTreeBuilder)} is currently active.");
+
         /// <summary>
         /// Constructs an instance of <see cref="RenderTreeBuilder"/>.
         /// </summary>
@@ -30,6 +49,32 @@ namespace Microsoft.AspNetCore.Blazor.RenderTree
         public RenderTreeBuilder(Renderer renderer)
         {
             _renderer = renderer ?? throw new ArgumentNullException(nameof(renderer));
+        }
+
+        internal void Activate()
+        {
+            // Although this logic is not properly thread-safe, it doesn't make any difference yet
+            // because having a single static _activeInstance implies we're relying on there being
+            // only one UI thread anyway. Later on when we use SynchronizationContext this will change.
+            if (_activeInstance != null)
+            {
+                // Should never be possible. The exception is to aid diagnosis of any bugs in the Blazor code itself.
+                throw new InvalidOperationException($"Another {nameof(RenderTreeBuilder)} is already active in this context.");
+            }
+
+            _activeInstance = this;
+        }
+
+        internal void Deactivate()
+        {
+            // See above for why thread-safety isn't an issue
+            if (_activeInstance != this)
+            {
+                // Should never be possible. The exception is to aid diagnosis of any bugs in the Blazor code itself.
+                throw new InvalidOperationException($"This {nameof(RenderTreeBuilder)} cannot be deactivated, because it is not currently active in this context.");
+            }
+
+            _activeInstance = null;
         }
 
         /// <summary>

@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.AspNetCore.Blazor.Rendering;
-using Microsoft.AspNetCore.Blazor.RenderTree;
 using System;
 
 namespace Microsoft.AspNetCore.Blazor.Components
@@ -31,7 +30,7 @@ namespace Microsoft.AspNetCore.Blazor.Components
         /// <summary>
         /// Notifies the renderer that the component should be rendered.
         /// </summary>
-        public void Render(Action<RenderTreeBuilder> renderAction)
+        public void Render(Action renderAction)
         {
             if (_renderer == null)
             {

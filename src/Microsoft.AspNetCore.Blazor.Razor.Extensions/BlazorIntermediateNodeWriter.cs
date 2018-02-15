@@ -18,7 +18,7 @@ namespace Microsoft.AspNetCore.Blazor.Razor
     /// </summary>
     internal class BlazorIntermediateNodeWriter : IntermediateNodeWriter
     {
-        private const string builderVarName = "builder";
+        public const string BuilderVarName = "builder";
 
         // Per the HTML spec, the following elements are inherently self-closing
         // For example, <img> is the same as <img /> (and therefore it cannot contain descendants)
@@ -119,7 +119,7 @@ namespace Microsoft.AspNetCore.Blazor.Razor
             // Since we're not in the middle of writing an element, this must evaluate as some
             // text to display
             context.CodeWriter
-                .WriteStartMethodInvocation($"{builderVarName}.{nameof(RenderTreeBuilder.AddText)}")
+                .WriteStartMethodInvocation($"{BuilderVarName}.{nameof(RenderTreeBuilder.AddText)}")
                 .Write((_sourceSequence++).ToString())
                 .WriteParameterSeparator();
 
@@ -208,7 +208,7 @@ namespace Microsoft.AspNetCore.Blazor.Razor
                         {
                             // Text node
                             codeWriter
-                                .WriteStartMethodInvocation($"{builderVarName}.{nameof(RenderTreeBuilder.AddText)}")
+                                .WriteStartMethodInvocation($"{BuilderVarName}.{nameof(RenderTreeBuilder.AddText)}")
                                 .Write((_sourceSequence++).ToString())
                                 .WriteParameterSeparator()
                                 .WriteStringLiteral(nextToken.Data)
@@ -227,7 +227,7 @@ namespace Microsoft.AspNetCore.Blazor.Razor
                                 if (TryGetComponentTypeNameFromTagName(tagNameOriginalCase, out var componentTypeName))
                                 {
                                     codeWriter
-                                        .WriteStartMethodInvocation($"{builderVarName}.{nameof(RenderTreeBuilder.OpenComponent)}<{componentTypeName}>")
+                                        .WriteStartMethodInvocation($"{BuilderVarName}.{nameof(RenderTreeBuilder.OpenComponent)}<{componentTypeName}>")
                                         .Write((_sourceSequence++).ToString())
                                         .WriteEndMethodInvocation();
                                     isComponent = true;
@@ -235,7 +235,7 @@ namespace Microsoft.AspNetCore.Blazor.Razor
                                 else
                                 {
                                     codeWriter
-                                        .WriteStartMethodInvocation($"{builderVarName}.{nameof(RenderTreeBuilder.OpenElement)}")
+                                        .WriteStartMethodInvocation($"{BuilderVarName}.{nameof(RenderTreeBuilder.OpenElement)}")
                                         .Write((_sourceSequence++).ToString())
                                         .WriteParameterSeparator()
                                         .WriteStringLiteral(nextTag.Data)
@@ -262,7 +262,7 @@ namespace Microsoft.AspNetCore.Blazor.Razor
                                 foreach (var token in _currentElementAttributeTokens)
                                 {
                                     codeWriter
-                                        .WriteStartMethodInvocation($"{builderVarName}.{nameof(RenderTreeBuilder.AddAttribute)}")
+                                        .WriteStartMethodInvocation($"{BuilderVarName}.{nameof(RenderTreeBuilder.AddAttribute)}")
                                         .Write((_sourceSequence++).ToString())
                                         .WriteParameterSeparator()
                                         .Write(token.AttributeValue.Content)
@@ -279,7 +279,7 @@ namespace Microsoft.AspNetCore.Blazor.Razor
                                     ? nameof(RenderTreeBuilder.CloseComponent)
                                     : nameof(RenderTreeBuilder.CloseElement);
                                 codeWriter
-                                    .WriteStartMethodInvocation($"{builderVarName}.{closeMethodName}")
+                                    .WriteStartMethodInvocation($"{BuilderVarName}.{closeMethodName}")
                                     .WriteEndMethodInvocation();
                             }
                             break;
@@ -332,7 +332,7 @@ namespace Microsoft.AspNetCore.Blazor.Razor
         private void WriteAttribute(CodeWriter codeWriter, string key, object value)
         {
             codeWriter
-                .WriteStartMethodInvocation($"{builderVarName}.{nameof(RenderTreeBuilder.AddAttribute)}")
+                .WriteStartMethodInvocation($"{BuilderVarName}.{nameof(RenderTreeBuilder.AddAttribute)}")
                 .Write((_sourceSequence++).ToString())
                 .WriteParameterSeparator()
                 .WriteStringLiteral(key)

@@ -19,8 +19,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
         {
             // Arrange
             var renderer = new TestRenderer();
-            var component = new TestComponent(builder =>
+            var component = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.OpenElement(0, "my element");
                 builder.AddText(1, "some text");
                 builder.CloseElement();
@@ -48,8 +49,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
         {
             // Arrange
             var renderer = new TestRenderer();
-            var component = new TestComponent(builder =>
+            var component = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.AddText(0, "Hello");
                 builder.OpenComponent<MessageComponent>(1);
                 builder.AddAttribute(2, nameof(MessageComponent.Message), "Nested component output");
@@ -121,8 +123,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
         {
             // Arrange: parent component already rendered
             var renderer = new TestRenderer();
-            var parentComponent = new TestComponent(builder =>
+            var parentComponent = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.OpenComponent<MessageComponent>(0);
                 builder.CloseComponent();
             });
@@ -196,8 +199,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
 
             // Arrange: Render parent component
             var renderer = new TestRenderer();
-            var parentComponent = new TestComponent(builder =>
+            var parentComponent = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.OpenComponent<EventComponent>(0);
                 builder.CloseComponent();
             });
@@ -234,8 +238,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
             // Arrange: Render a component with an event handler
             var renderer = new TestRenderer();
             UIEventHandler handler = args => throw new NotImplementedException();
-            var component = new TestComponent(builder =>
+            var component = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.OpenElement(0, "mybutton");
                 builder.AddAttribute(1, "my click event", handler);
                 builder.CloseElement();
@@ -312,8 +317,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
             // Arrange: First render, capturing child component instance
             var renderer = new TestRenderer();
             var message = "Hello";
-            var component = new TestComponent(builder =>
+            var component = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.AddText(0, message);
                 builder.OpenComponent<MessageComponent>(1);
                 builder.CloseComponent();
@@ -351,8 +357,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
             var renderer = new TestRenderer();
             var objectThatWillNotChange = new object();
             var firstRender = true;
-            var component = new TestComponent(builder =>
+            var component = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.OpenComponent<FakeComponent>(1);
                 builder.AddAttribute(2, nameof(FakeComponent.IntProperty), firstRender ? 123 : 256);
                 builder.AddAttribute(3, nameof(FakeComponent.ObjectProperty), objectThatWillNotChange);
@@ -389,8 +396,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
             // Arrange: First render
             var renderer = new TestRenderer();
             var firstRender = true;
-            var component = new TestComponent(builder =>
+            var component = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.OpenComponent<MessageComponent>(1);
                 builder.AddAttribute(2, nameof(MessageComponent.Message), firstRender ? "first" : "second");
                 builder.CloseComponent();
@@ -425,8 +433,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
             // Arrange
             var renderer = new TestRenderer();
             var firstRender = true;
-            var component = new TestComponent(builder =>
+            var component = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 if (firstRender)
                 {
                     // Nested descendants
@@ -616,7 +625,7 @@ namespace Microsoft.AspNetCore.Blazor.Test
         public void ComponentCannotTriggerRenderBeforeRenderHandleAssigned()
         {
             // Arrange
-            var component = new TestComponent(builder => { });
+            var component = new TestComponent(() => { });
 
             // Act/Assert
             var ex = Assert.Throws<InvalidOperationException>(() =>
@@ -632,8 +641,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
             // Arrange
             var renderer = new TestRenderer();
             var renderCount = 0;
-            var component = new TestComponent(builder =>
+            var component = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.AddText(0, $"Render count: {++renderCount}");
             });
             var componentId = renderer.AssignComponentId(component);
@@ -665,8 +675,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
             var renderer = new TestRenderer();
             TestComponent parent = null;
             var parentRenderCount = 0;
-            parent = new TestComponent(builder =>
+            parent = new TestComponent(() =>
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.OpenComponent<ReRendersParentComponent>(0);
                 builder.AddAttribute(1, nameof(ReRendersParentComponent.Parent), parent);
                 builder.CloseComponent();
@@ -790,9 +801,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
         private class TestComponent : IComponent
         {
             private RenderHandle _renderHandle;
-            private Action<RenderTreeBuilder> _renderAction;
+            private Action _renderAction;
 
-            public TestComponent(Action<RenderTreeBuilder> renderAction)
+            public TestComponent(Action renderAction)
             {
                 _renderAction = renderAction;
             }
@@ -813,8 +824,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
         {
             public string Message { get; set; }
 
-            protected override void BuildRenderTree(RenderTreeBuilder builder)
+            protected override void BuildRenderTree()
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.AddText(0, Message);
             }
         }
@@ -838,8 +850,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
             public UIEventHandler Handler { get; set; }
             public bool SkipElement { get; set; }
 
-            protected override void BuildRenderTree(RenderTreeBuilder builder)
+            protected override void BuildRenderTree()
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.OpenElement(0, "grandparent");
                 if (!SkipElement)
                 {
@@ -864,8 +877,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
             public bool IncludeChild { get; set; }
             public IDictionary<string, object> ChildParameters { get; set; }
 
-            protected override void BuildRenderTree(RenderTreeBuilder builder)
+            protected override void BuildRenderTree()
             {
+                var builder = RenderTreeBuilder.Current;
                 builder.AddText(0, "Parent here");
                 
                 if (IncludeChild)
@@ -889,8 +903,10 @@ namespace Microsoft.AspNetCore.Blazor.Test
             public TestComponent Parent { get; set; }
             private bool _isFirstTime = true;
 
-            protected override void BuildRenderTree(RenderTreeBuilder builder)
+            protected override void BuildRenderTree()
             {
+                var builder = RenderTreeBuilder.Current;
+
                 if (_isFirstTime) // Don't want an infinite loop
                 {
                     _isFirstTime = false;
@@ -917,8 +933,9 @@ namespace Microsoft.AspNetCore.Blazor.Test
             {
                 foreach (var renderHandle in _renderHandles)
                 {
-                    renderHandle.Render(builder =>
+                    renderHandle.Render(() =>
                     {
+                        var builder = RenderTreeBuilder.Current;
                         builder.AddText(0, $"Hello from {nameof(MultiRendererComponent)}");
                     });
                 }

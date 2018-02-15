@@ -50,7 +50,7 @@ namespace Microsoft.AspNetCore.Blazor.Razor
             line.Children.Add(new IntermediateToken
             {
                 Kind = TokenKind.CSharp,
-                Content = $"base.{primaryMethod.MethodName}(builder);" + Environment.NewLine
+                Content = $"var {BlazorIntermediateNodeWriter.BuilderVarName} = {RenderTreeBuilder.RenderTreeBuilderTypeFullName}.{nameof(RenderTreeBuilder.Current)};" + Environment.NewLine
             });
             primaryMethod.Children.Insert(0, line);
         }

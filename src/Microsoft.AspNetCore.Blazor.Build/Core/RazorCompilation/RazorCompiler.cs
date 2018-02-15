@@ -102,14 +102,6 @@ namespace Microsoft.AspNetCore.Blazor.Build.Core.RazorCompilation
                 engine.Process(codeDoc);
                 var csharpDocument = codeDoc.GetCSharpDocument();
                 var generatedCode = csharpDocument.GeneratedCode;
-
-                // Add parameters to the primary method via string manipulation because
-                // DefaultDocumentWriter's VisitMethodDeclaration can't emit parameters
-                var primaryMethodSource = $"protected override void {BlazorComponent.BuildRenderTreeMethodName}";
-                generatedCode = generatedCode.Replace(
-                    $"{primaryMethodSource}()",
-                    $"{primaryMethodSource}({typeof(RenderTreeBuilder).FullName} builder)");
-
                 resultOutput.WriteLine(generatedCode);
 
                 return Enumerable.Empty<RazorCompilerDiagnostic>();

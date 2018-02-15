@@ -331,6 +331,64 @@ namespace Microsoft.AspNetCore.Blazor.Test
             Assert.Empty(builder.GetFrames());
         }
 
+        [Fact]
+        public void CannotReadCurrentIfNoneIsActive()
+        {
+            Assert.Throws<InvalidOperationException>(() => RenderTreeBuilder.Current);
+        }
+
+        [Fact]
+        public void CanActivateAndDeactivate()
+        {
+            // Arrange
+            var builder = new RenderTreeBuilder(new TestRenderer());
+
+            // Act/Assert: Can activate
+            builder.Activate();
+            Assert.Same(builder, RenderTreeBuilder.Current);
+
+            // Act/Assert: Can deactivate
+            builder.Deactivate();
+            Assert.Throws<InvalidOperationException>(() => RenderTreeBuilder.Current);
+        }
+
+        [Fact]
+        public void CannotActivateMoreThanOneInSameContext()
+        {
+            // Arrange
+            var builder1 = new RenderTreeBuilder(new TestRenderer());
+            var builder2 = new RenderTreeBuilder(new TestRenderer());
+            builder1.Activate();
+            try
+            {
+                // Act/Assert
+                Assert.Throws<InvalidOperationException>(() => builder2.Activate());
+            }
+            finally
+            {
+                builder1.Deactivate();
+            }
+        }
+
+        [Fact]
+        public void CannotDeactivateIfNotActive()
+        {
+            // Arrange
+            var activeBuilder = new RenderTreeBuilder(new TestRenderer());
+            var inactiveBuilder = new RenderTreeBuilder(new TestRenderer());
+            activeBuilder.Activate();
+
+            // Act/Assert
+            try
+            {
+                Assert.Throws<InvalidOperationException>(() => inactiveBuilder.Deactivate());
+            }
+            finally
+            {
+                activeBuilder.Deactivate();
+            }
+        }
+
         private class TestComponent : IComponent
         {
             public void Init(RenderHandle renderHandle) { }

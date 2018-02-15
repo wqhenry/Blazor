@@ -18,28 +18,23 @@ namespace Microsoft.AspNetCore.Blazor.Components
     /// </summary>
     public abstract class BlazorComponent : IComponent, IHandleEvent
     {
-        public const string BuildRenderTreeMethodName = nameof(BuildRenderTree);
-
-        private readonly Action<RenderTreeBuilder> _renderAction;
+        private readonly Action _renderAction;
         private RenderHandle _renderHandle;
         private bool _hasNeverRendered = true;
         private bool _hasPendingQueuedRender;
 
         public BlazorComponent()
         {
-            _renderAction = BuildRenderTree;
+            _renderAction = Render;
         }
 
         /// <summary>
         /// Renders the component to the supplied <see cref="RenderTreeBuilder"/>.
         /// </summary>
-        /// <param name="builder">A <see cref="RenderTreeBuilder"/> that will receive the render output.</param>
-        protected virtual void BuildRenderTree(RenderTreeBuilder builder)
+        protected virtual void BuildRenderTree()
         {
             // Developers can either override this method in derived classes, or can use Razor
             // syntax to define a derived class and have the compiler generate the method.
-            _hasPendingQueuedRender = false;
-            _hasNeverRendered = false;
         }
 
         /// <summary>
@@ -107,6 +102,13 @@ namespace Microsoft.AspNetCore.Blazor.Components
             // This just saves the developer the trouble of putting "StateHasChanged();"
             // at the end of every event callback.
             StateHasChanged();
+        }
+
+        private void Render()
+        {
+            _hasPendingQueuedRender = false;
+            _hasNeverRendered = false;
+            BuildRenderTree();
         }
 
         // At present, if you have a .cshtml file in a project with <Project Sdk="Microsoft.NET.Sdk.Web">,
