@@ -13,14 +13,11 @@ namespace Microsoft.AspNetCore.Blazor.Razor
     public class BlazorRazorEngine
     {
         private readonly RazorEngine _engine;
-        private readonly RazorCodeGenerationOptions _codegenOptions;
 
         public RazorEngine Engine => _engine;
 
         public BlazorRazorEngine()
         {
-            _codegenOptions = RazorCodeGenerationOptions.CreateDefault();
-
             _engine = RazorEngine.Create(configure =>
             {
                 FunctionsDirective.Register(configure);
@@ -28,17 +25,11 @@ namespace Microsoft.AspNetCore.Blazor.Razor
                 TemporaryLayoutPass.Register(configure);
                 TemporaryImplementsPass.Register(configure);
 
-                configure.SetBaseType(BlazorComponent.FullTypeName);
+                configure.Features.Add(new ComponentDocumentClassifierPass());
 
                 configure.Phases.Remove(
                     configure.Phases.OfType<IRazorCSharpLoweringPhase>().Single());
-                configure.Phases.Add(new BlazorLoweringPhase(_codegenOptions));
-
-                configure.ConfigureClass((codeDoc, classNode) =>
-                {
-                    configure.SetNamespace((string)codeDoc.Items[BlazorCodeDocItems.Namespace]);
-                    classNode.ClassName = (string)codeDoc.Items[BlazorCodeDocItems.ClassName];
-                });
+                configure.Phases.Add(new BlazorLoweringPhase());
             });
         }
     }

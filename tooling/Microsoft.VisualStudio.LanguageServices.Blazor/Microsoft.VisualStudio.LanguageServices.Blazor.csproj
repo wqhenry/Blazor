@@ -4,6 +4,23 @@
     <TargetFramework>net461</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <RazorRepo>..\..\..\Razor\</RazorRepo>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(RazorRepo)'==''">
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="2.0.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Razor" Version="2.0.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Razor.Workspaces" Version="2.0.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RazorRepo)'!=''">
+    <Reference Include="$(RazorRepo)src\Microsoft.AspNetCore.Razor.Language\bin\$(Configuration)\net46\Microsoft.AspNetCore.Razor.Language.dll" />
+    <Reference Include="$(RazorRepo)src\Microsoft.CodeAnalysis.Razor\bin\$(Configuration)\net46\Microsoft.CodeAnalysis.Razor.dll" />
+    <Reference Include="$(RazorRepo)src\Microsoft.CodeAnalysis.Razor.Workspaces\bin\$(Configuration)\net46\Microsoft.CodeAnalysis.Razor.Workspaces.dll" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="2.4.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\anglesharp\AngleSharpBuilder\AngleSharpBuilder.csproj">
       <Name>AngleSharpBuilder</Name>

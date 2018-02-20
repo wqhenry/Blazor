@@ -14,45 +14,15 @@ namespace Microsoft.AspNetCore.Blazor.Razor
     /// </summary>
     internal class BlazorLoweringPhase : IRazorCSharpLoweringPhase
     {
-        private readonly RazorCodeGenerationOptions _codegenOptions;
-
-        public BlazorLoweringPhase(RazorCodeGenerationOptions codegenOptions)
-        {
-            _codegenOptions = codegenOptions
-                ?? throw new ArgumentNullException(nameof(codegenOptions));
-        }
-
         public RazorEngine Engine { get; set; }
 
         public void Execute(RazorCodeDocument codeDocument)
         {
-            var writer = BlazorComponentDocumentWriter.Create(_codegenOptions);
             var documentNode = codeDocument.GetDocumentIntermediateNode();
-            ConvertToBlazorPrimaryMethod(documentNode);
+
+            var writer = BlazorComponentDocumentWriter.Create(documentNode);
             var csharpDoc = writer.WriteDocument(codeDocument, documentNode);
             codeDocument.SetCSharpDocument(csharpDoc);
-        }
-
-        private void ConvertToBlazorPrimaryMethod(DocumentIntermediateNode documentNode)
-        {
-            // Replaces the default "ExecuteAsync" method with Blazor's "BuildRenderTree".
-            // Note that DefaultDocumentWriter's VisitMethodDeclaration is hardcoded to
-            // emit methods with no parameters, so there's no way of setting the parameters
-            // from here. We inject the parameter later in RazorCompiler.
-            var primaryMethod = documentNode.FindPrimaryMethod();
-            primaryMethod.ReturnType = "void";
-            primaryMethod.MethodName = BlazorComponent.BuildRenderTree;
-            primaryMethod.Modifiers.Clear();
-            primaryMethod.Modifiers.Add("protected");
-            primaryMethod.Modifiers.Add("override");
-
-            var line = new CSharpCodeIntermediateNode();
-            line.Children.Add(new IntermediateToken
-            {
-                Kind = TokenKind.CSharp,
-                Content = $"base.{primaryMethod.MethodName}(builder);" + Environment.NewLine
-            });
-            primaryMethod.Children.Insert(0, line);
         }
 
         /// <summary>
@@ -61,8 +31,8 @@ namespace Microsoft.AspNetCore.Blazor.Razor
         /// </summary>
         private class BlazorComponentDocumentWriter : DocumentWriter
         {
-            public static DocumentWriter Create(RazorCodeGenerationOptions options)
-                => Instance.Create(new BlazorCodeTarget(), options);
+            public static DocumentWriter Create(DocumentIntermediateNode irDocument)
+                => Instance.Create(irDocument.Target, irDocument.Options);
 
             private static BlazorComponentDocumentWriter Instance
                 = new BlazorComponentDocumentWriter();

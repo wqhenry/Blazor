@@ -6,9 +6,22 @@
     <RootNamespace>Microsoft.AspNetCore.Blazor.Razor</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
+  <PropertyGroup>
+    <RazorRepo>..\..\..\Razor\</RazorRepo>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RazorRepo)'!=''">
+    <DefineConstants>RAZOR_2_1;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(RazorRepo)'==''">
     <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="2.0.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.Razor" Version="2.0.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RazorRepo)'!=''">
+    <Reference Include="$(RazorRepo)src\Microsoft.AspNetCore.Razor.Language\bin\$(Configuration)\net46\Microsoft.AspNetCore.Razor.Language.dll" />
+    <Reference Include="$(RazorRepo)src\Microsoft.CodeAnalysis.Razor\bin\$(Configuration)\net46\Microsoft.CodeAnalysis.Razor.dll" />
   </ItemGroup>
 
   <ItemGroup>
