@@ -7,20 +7,23 @@ using System.Reflection;
 using Microsoft.AspNetCore.Blazor.Components;
 using Microsoft.AspNetCore.Blazor.Layouts;
 using Microsoft.AspNetCore.Blazor.RenderTree;
+using Microsoft.AspNetCore.Blazor.Services;
 
-namespace Microsoft.AspNetCore.Blazor.Browser.Routing
+namespace Microsoft.AspNetCore.Blazor.Routing
 {
     /// <summary>
     /// A component that displays whichever other component corresponds to the
-    /// browser's changing navigation state.
+    /// current navigation location.
     /// </summary>
-    public class BrowserRouter : IComponent, IDisposable
+    public class Router : IComponent, IDisposable
     {
         static readonly char[] _queryOrHashStartChar = new[] { '?', '#' };
 
         RenderHandle _renderHandle;
         string _baseUriPrefix;
         string _locationAbsolute;
+
+        [Inject] private IUriHelper UriHelper { get; set; }
 
         /// <summary>
         /// Gets or sets the assembly that should be searched, along with its referenced
@@ -44,11 +47,9 @@ namespace Microsoft.AspNetCore.Blazor.Browser.Routing
         public void Init(RenderHandle renderHandle)
         {
             _renderHandle = renderHandle;
-
-            UriHelper.EnableNavigationInteception();
-            UriHelper.OnLocationChanged += OnLocationChanged;
             _baseUriPrefix = UriHelper.GetBaseUriPrefix();
             _locationAbsolute = UriHelper.GetAbsoluteUri();
+            UriHelper.OnLocationChanged += OnLocationChanged;
         }
 
         /// <inheritdoc />
@@ -84,7 +85,7 @@ namespace Microsoft.AspNetCore.Blazor.Browser.Routing
             }
 
             return FindComponentTypeInAssemblyOrReferences(AppAssembly, componentTypeName)
-                ?? throw new InvalidOperationException($"{nameof(BrowserRouter)} cannot find any component type with name {componentTypeName}.");
+                ?? throw new InvalidOperationException($"{nameof(Router)} cannot find any component type with name {componentTypeName}.");
         }
 
         private string StringUntilAny(string str, char[] chars)
